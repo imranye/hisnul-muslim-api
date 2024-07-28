@@ -1,7 +1,7 @@
 import csv
 from bs4 import BeautifulSoup
 
-# Assuming you have saved the HTML content in a file named 'duas.html'
+# Assuming you have saved the HTML content in a file named 'output.html'
 with open('output.html', 'r', encoding='utf-8') as file:
     html_content = file.read()
 
@@ -13,8 +13,9 @@ for dua_container in soup.find_all('div', class_='dua-container'):
     chapter_title = dua_container.find('div', class_='chapter-title')
     
     if chapter_title:
-        chapter_name = chapter_title.find('div').text.strip()
-        number_of_duas = chapter_title.find('div', class_='number-of-duas').text.strip()
+        chapter_name = chapter_title.find('div').text.strip() if chapter_title.find('div') else ''
+        number_of_duas = chapter_title.find('div', class_='number-of-duas')
+        number_of_duas = number_of_duas.text.strip() if number_of_duas else ''
     else:
         continue  # Skip containers without a chapter title
 
