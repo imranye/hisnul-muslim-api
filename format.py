@@ -2,7 +2,7 @@ import csv
 from bs4 import BeautifulSoup
 
 # Assuming you have saved the HTML content in a file named 'duas.html'
-with open('duas.html', 'r', encoding='utf-8') as file:
+with open('output.html', 'r', encoding='utf-8') as file:
     html_content = file.read()
 
 soup = BeautifulSoup(html_content, 'html.parser')
