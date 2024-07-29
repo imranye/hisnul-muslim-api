@@ -5,6 +5,7 @@ import random
 import logging
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_caching import Cache
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -23,6 +24,9 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"  # Store rate limiting data in memory
 )
+
+# Initialize Flask-Caching
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 def load_duas():
     """
@@ -76,6 +80,7 @@ def ratelimit_handler(e):
 # API route to get all duas
 @api_v1.route('/duas', methods=['GET'])
 @limiter.limit("100 per day")
+@cache.cached(timeout=3600)  # Cache for 1 hour
 def get_duas():
     """
     Retrieve all duas.
@@ -90,6 +95,7 @@ def get_duas():
 # API route to get duas for a specific chapter
 @api_v1.route('/duas/<int:chapter_id>', methods=['GET'])
 @limiter.limit("200 per day")
+@cache.cached(timeout=3600)  # Cache for 1 hour
 def get_dua(chapter_id):
     """
     Retrieve duas for a specific chapter.
@@ -114,6 +120,7 @@ def get_dua(chapter_id):
 # API route to get a specific dua from a specific chapter
 @api_v1.route('/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
 @limiter.limit("300 per day")
+@cache.cached(timeout=3600)  # Cache for 1 hour
 def get_individual_dua(chapter_id, dua_id):
     """
     Retrieve a specific dua from a specific chapter.
@@ -143,6 +150,7 @@ def get_individual_dua(chapter_id, dua_id):
 # API route to get a random dua (Dua of the Day)
 @api_v1.route('/duadaily', methods=['GET'])
 @limiter.limit("50 per day")
+@cache.cached(timeout=86400)  # Cache for 24 hours
 def get_dua_of_the_day():
     """
     Retrieve a random dua as the Dua of the Day.
