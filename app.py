@@ -29,5 +29,19 @@ def get_dua(chapter_id):
     else:
         return jsonify({"error": "Chapter not found"}), 404
 
+
+@app.route('/api/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
+def get_individual_dua(chapter_id, dua_id):
+    chapters = list(duas.keys())
+    if 0 <= chapter_id < len(chapters):
+        chapter = chapters[chapter_id]
+        chapter_duas = duas[chapter]
+        if 0 <= dua_id < len(chapter_duas):
+            return jsonify(chapter_duas[dua_id])
+        else:
+            return jsonify({"error": "Dua not found in this chapter"}), 404
+    else:
+        return jsonify({"error": "Chapter not found"}), 404
+
 if __name__ == '__main__':
     app.run(debug=True)
