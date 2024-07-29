@@ -13,6 +13,7 @@ def load_duas():
             chapter = row['Chapter']
             if chapter == "Uncategorized":
                 chapter = current_chapter
+                row['Chapter'] = current_chapter  # Update the row data
             else:
                 current_chapter = chapter
             
