@@ -44,7 +44,7 @@ This API provides access to duas (supplications) from the book "Hisnul Muslim" (
 
 - `GET /api/v1/duas`: Retrieve all duas
 - `GET /api/v1/duas/<chapter_id>`: Retrieve duas for a specific chapter
-- `GET /api/v1/duadaily`: Retrieve a random dua (inspired by duadaily.fyi)
+- `GET /api/v1/duadaily`: Retrieve a random dua (inspired by [duadaily.fyi](https://duadaily.fyi))
 
 ## Rate Limiting
 
