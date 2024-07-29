@@ -1,10 +1,13 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, Blueprint
 import csv
 import random
 import logging
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
+
+# Create a Blueprint for API v1
+api_v1 = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
 def load_duas():
     duas_by_chapter = {}
@@ -41,13 +44,13 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/api/duas', methods=['GET'])
+@api_v1.route('/duas', methods=['GET'])
 def get_duas():
     if not duas:
         return jsonify({"error": "No duas available"}), 404
     return jsonify(duas)
 
-@app.route('/api/duas/<int:chapter_id>', methods=['GET'])
+@api_v1.route('/duas/<int:chapter_id>', methods=['GET'])
 def get_dua(chapter_id):
     try:
         chapters = list(duas.keys())
@@ -60,7 +63,7 @@ def get_dua(chapter_id):
         logging.error(f"Error in get_dua: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/api/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
+@api_v1.route('/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
 def get_individual_dua(chapter_id, dua_id):
     try:
         chapters = list(duas.keys())
@@ -77,7 +80,7 @@ def get_individual_dua(chapter_id, dua_id):
         logging.error(f"Error in get_individual_dua: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/api/duadaily', methods=['GET'])
+@api_v1.route('/duadaily', methods=['GET'])
 def get_dua_of_the_day():
     try:
         all_duas = []
@@ -90,6 +93,9 @@ def get_dua_of_the_day():
     except Exception as e:
         logging.error(f"Error in get_dua_of_the_day: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+# Register the Blueprint
+app.register_blueprint(api_v1)
 
 if __name__ == '__main__':
     app.run(debug=True)
