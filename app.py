@@ -6,15 +6,20 @@ app = Flask(__name__)
 
 def load_duas():
     duas_by_chapter = {}
+    current_chapter = ""
     with open('duas.csv', 'r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             chapter = row['Chapter']
+            if chapter == "Uncategorized":
+                chapter = current_chapter
+            else:
+                current_chapter = chapter
+            
             if chapter not in duas_by_chapter:
                 duas_by_chapter[chapter] = []
             duas_by_chapter[chapter].append(row)
     return duas_by_chapter
-
 duas = load_duas()
 
 @app.route('/api/duas', methods=['GET'])
