@@ -1,3 +1,4 @@
+# Import necessary modules
 from flask import Flask, jsonify, Blueprint
 import csv
 import random
@@ -5,21 +6,31 @@ import logging
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+# Initialize Flask application
 app = Flask(__name__)
+# Configure logging to INFO level
 logging.basicConfig(level=logging.INFO)
 
 # Create a Blueprint for API v1
+# This allows for better organization and versioning of the API
 api_v1 = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
 # Initialize rate limiter
+# This helps prevent abuse of the API by limiting request frequency
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
+    storage_uri="memory://"  # Store rate limiting data in memory
 )
 
 def load_duas():
+    """
+    Load duas from a CSV file and organize them by chapter.
+    
+    Returns:
+    dict: A dictionary where keys are chapter names and values are lists of duas.
+    """
     duas_by_chapter = {}
     current_chapter = ""
     try:
@@ -27,12 +38,14 @@ def load_duas():
             reader = csv.DictReader(csvfile)
             for row in reader:
                 chapter = row['Chapter']
+                # Handle 'Uncategorized' duas by assigning them to the current chapter
                 if chapter == "Uncategorized":
                     chapter = current_chapter
                     row['Chapter'] = current_chapter  # Update the row data
                 else:
                     current_chapter = chapter
                 
+                # Create a new list for the chapter if it doesn't exist
                 if chapter not in duas_by_chapter:
                     duas_by_chapter[chapter] = []
                 duas_by_chapter[chapter].append(row)
@@ -44,8 +57,10 @@ def load_duas():
         logging.error(f"Error reading CSV file: {e}")
         return {}
 
+# Load duas at startup
 duas = load_duas()
 
+# Error handlers for common HTTP status codes
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Not found"}), 404
@@ -58,16 +73,33 @@ def internal_error(error):
 def ratelimit_handler(e):
     return jsonify({"error": "Rate limit exceeded", "description": str(e.description)}), 429
 
+# API route to get all duas
 @api_v1.route('/duas', methods=['GET'])
 @limiter.limit("100 per day")
 def get_duas():
+    """
+    Retrieve all duas.
+    
+    Returns:
+    JSON: All duas organized by chapter, or an error if no duas are available.
+    """
     if not duas:
         return jsonify({"error": "No duas available"}), 404
     return jsonify(duas)
 
+# API route to get duas for a specific chapter
 @api_v1.route('/duas/<int:chapter_id>', methods=['GET'])
 @limiter.limit("200 per day")
 def get_dua(chapter_id):
+    """
+    Retrieve duas for a specific chapter.
+    
+    Args:
+    chapter_id (int): The ID of the chapter.
+    
+    Returns:
+    JSON: Duas for the specified chapter, or an error if the chapter is not found.
+    """
     try:
         chapters = list(duas.keys())
         if 0 <= chapter_id < len(chapters):
@@ -79,9 +111,20 @@ def get_dua(chapter_id):
         logging.error(f"Error in get_dua: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
+# API route to get a specific dua from a specific chapter
 @api_v1.route('/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
 @limiter.limit("300 per day")
 def get_individual_dua(chapter_id, dua_id):
+    """
+    Retrieve a specific dua from a specific chapter.
+    
+    Args:
+    chapter_id (int): The ID of the chapter.
+    dua_id (int): The ID of the dua within the chapter.
+    
+    Returns:
+    JSON: The specified dua, or an error if the chapter or dua is not found.
+    """
     try:
         chapters = list(duas.keys())
         if 0 <= chapter_id < len(chapters):
@@ -97,9 +140,16 @@ def get_individual_dua(chapter_id, dua_id):
         logging.error(f"Error in get_individual_dua: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
+# API route to get a random dua (Dua of the Day)
 @api_v1.route('/duadaily', methods=['GET'])
 @limiter.limit("50 per day")
 def get_dua_of_the_day():
+    """
+    Retrieve a random dua as the Dua of the Day.
+    
+    Returns:
+    JSON: A randomly selected dua, or an error if no duas are available.
+    """
     try:
         all_duas = []
         for chapter_duas in duas.values():
@@ -112,8 +162,9 @@ def get_dua_of_the_day():
         logging.error(f"Error in get_dua_of_the_day: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-# Register the Blueprint
+# Register the Blueprint with the Flask application
 app.register_blueprint(api_v1)
 
+# Run the application if this script is executed directly
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)  # Note: Set debug=False in production
