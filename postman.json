@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "Hisnul Muslim API",
+    "description": "API for Hisnul Muslim duas",
+    "_postman_id": "hisnul-muslim-api-collection"
+  },
+  "item": [
+    {
+      "name": "Get All Duas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/duas",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "duas"]
+        },
+        "description": "Retrieve all duas organized by chapter"
+      }
+    },
+    {
+      "name": "Get Duas for Specific Chapter",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/duas/0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "duas", "0"]
+        },
+        "description": "Retrieve duas for a specific chapter (replace 0 with the desired chapter ID)"
+      }
+    },
+    {
+      "name": "Get Specific Dua from Chapter",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/duas/0/0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "duas", "0", "0"]
+        },
+        "description": "Retrieve a specific dua from a specific chapter (replace the first 0 with chapter ID and the second 0 with dua ID)"
+      }
+    },
+    {
+      "name": "Get Dua of the Day",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/duadaily",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "duadaily"]
+        },
+        "description": "Retrieve a random dua as the Dua of the Day"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}
