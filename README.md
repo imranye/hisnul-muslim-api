@@ -12,6 +12,8 @@ This API provides access to duas (supplications) from the book "Hisnul Muslim" (
 
 ## Installation
 
+0. Bismillah
+
 1. Clone the repository:
    ```
    git clone https://github.com/yourusername/hisnul-muslim-api.git
