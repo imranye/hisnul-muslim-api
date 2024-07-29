@@ -6,6 +6,7 @@ import logging
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
+from flask_restx import Api, Resource, fields
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -15,6 +16,10 @@ logging.basicConfig(level=logging.INFO)
 # Create a Blueprint for API v1
 # This allows for better organization and versioning of the API
 api_v1 = Blueprint('api_v1', __name__, url_prefix='/api/v1')
+
+# Initialize Flask-RESTX
+api = Api(api_v1, version='1.0', title='Hisnul Muslim API',
+          description='API for retrieving duas from Hisnul Muslim')
 
 # Initialize rate limiter
 # This helps prevent abuse of the API by limiting request frequency
@@ -77,98 +82,99 @@ def internal_error(error):
 def ratelimit_handler(e):
     return jsonify({"error": "Rate limit exceeded", "description": str(e.description)}), 429
 
+# Define models for Swagger documentation
+dua_model = api.model('Dua', {
+    'Chapter': fields.String(required=True, description='Chapter name'),
+    'Reference': fields.String(required=True, description='Reference number'),
+    'Arabic': fields.String(required=True, description='Dua in Arabic'),
+    'English': fields.String(required=True, description='English translation of the dua'),
+    'Transliteration': fields.String(required=True, description='Transliteration of the dua')
+})
+
 # API route to get all duas
-@api_v1.route('/duas', methods=['GET'])
-@limiter.limit("100 per day")
-@cache.cached(timeout=3600)  # Cache for 1 hour
-def get_duas():
-    """
-    Retrieve all duas.
-    
-    Returns:
-    JSON: All duas organized by chapter, or an error if no duas are available.
-    """
-    if not duas:
-        return jsonify({"error": "No duas available"}), 404
-    return jsonify(duas)
+@api.route('/duas')
+class AllDuas(Resource):
+    @api.doc('get_all_duas')
+    @limiter.limit("100 per day")
+    @cache.cached(timeout=3600)  # Cache for 1 hour
+    def get(self):
+        """
+        Retrieve all duas
+        """
+        if not duas:
+            api.abort(404, "No duas available")
+        return jsonify(duas)
 
 # API route to get duas for a specific chapter
-@api_v1.route('/duas/<int:chapter_id>', methods=['GET'])
-@limiter.limit("200 per day")
-@cache.cached(timeout=3600)  # Cache for 1 hour
-def get_dua(chapter_id):
-    """
-    Retrieve duas for a specific chapter.
-    
-    Args:
-    chapter_id (int): The ID of the chapter.
-    
-    Returns:
-    JSON: Duas for the specified chapter, or an error if the chapter is not found.
-    """
-    try:
-        chapters = list(duas.keys())
-        if 0 <= chapter_id < len(chapters):
-            chapter = chapters[chapter_id]
-            return jsonify(duas[chapter])
-        else:
-            return jsonify({"error": "Chapter not found"}), 404
-    except Exception as e:
-        logging.error(f"Error in get_dua: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+@api.route('/duas/<int:chapter_id>')
+class ChapterDuas(Resource):
+    @api.doc('get_chapter_duas')
+    @api.param('chapter_id', 'The chapter ID')
+    @limiter.limit("200 per day")
+    @cache.cached(timeout=3600)  # Cache for 1 hour
+    def get(self, chapter_id):
+        """
+        Retrieve duas for a specific chapter
+        """
+        try:
+            chapters = list(duas.keys())
+            if 0 <= chapter_id < len(chapters):
+                chapter = chapters[chapter_id]
+                return jsonify(duas[chapter])
+            else:
+                api.abort(404, "Chapter not found")
+        except Exception as e:
+            logging.error(f"Error in get_dua: {e}")
+            api.abort(500, "Internal server error")
 
 # API route to get a specific dua from a specific chapter
-@api_v1.route('/duas/<int:chapter_id>/<int:dua_id>', methods=['GET'])
-@limiter.limit("300 per day")
-@cache.cached(timeout=3600)  # Cache for 1 hour
-def get_individual_dua(chapter_id, dua_id):
-    """
-    Retrieve a specific dua from a specific chapter.
-    
-    Args:
-    chapter_id (int): The ID of the chapter.
-    dua_id (int): The ID of the dua within the chapter.
-    
-    Returns:
-    JSON: The specified dua, or an error if the chapter or dua is not found.
-    """
-    try:
-        chapters = list(duas.keys())
-        if 0 <= chapter_id < len(chapters):
-            chapter = chapters[chapter_id]
-            chapter_duas = duas[chapter]
-            if 0 <= dua_id < len(chapter_duas):
-                return jsonify(chapter_duas[dua_id])
+@api.route('/duas/<int:chapter_id>/<int:dua_id>')
+class IndividualDua(Resource):
+    @api.doc('get_individual_dua')
+    @api.param('chapter_id', 'The chapter ID')
+    @api.param('dua_id', 'The dua ID within the chapter')
+    @limiter.limit("300 per day")
+    @cache.cached(timeout=3600)  # Cache for 1 hour
+    def get(self, chapter_id, dua_id):
+        """
+        Retrieve a specific dua from a specific chapter
+        """
+        try:
+            chapters = list(duas.keys())
+            if 0 <= chapter_id < len(chapters):
+                chapter = chapters[chapter_id]
+                chapter_duas = duas[chapter]
+                if 0 <= dua_id < len(chapter_duas):
+                    return jsonify(chapter_duas[dua_id])
+                else:
+                    api.abort(404, "Dua not found in this chapter")
             else:
-                return jsonify({"error": "Dua not found in this chapter"}), 404
-        else:
-            return jsonify({"error": "Chapter not found"}), 404
-    except Exception as e:
-        logging.error(f"Error in get_individual_dua: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+                api.abort(404, "Chapter not found")
+        except Exception as e:
+            logging.error(f"Error in get_individual_dua: {e}")
+            api.abort(500, "Internal server error")
 
 # API route to get a random dua (Dua of the Day)
-@api_v1.route('/duadaily', methods=['GET'])
-@limiter.limit("50 per day")
-@cache.cached(timeout=86400)  # Cache for 24 hours
-def get_dua_of_the_day():
-    """
-    Retrieve a random dua as the Dua of the Day.
-    
-    Returns:
-    JSON: A randomly selected dua, or an error if no duas are available.
-    """
-    try:
-        all_duas = []
-        for chapter_duas in duas.values():
-            all_duas.extend(chapter_duas)
-        if all_duas:
-            return jsonify(random.choice(all_duas))
-        else:
-            return jsonify({"error": "No duas available"}), 404
-    except Exception as e:
-        logging.error(f"Error in get_dua_of_the_day: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+@api.route('/duadaily')
+class DuaOfTheDay(Resource):
+    @api.doc('get_dua_of_the_day')
+    @limiter.limit("50 per day")
+    @cache.cached(timeout=86400)  # Cache for 24 hours
+    def get(self):
+        """
+        Retrieve a random dua as the Dua of the Day
+        """
+        try:
+            all_duas = []
+            for chapter_duas in duas.values():
+                all_duas.extend(chapter_duas)
+            if all_duas:
+                return jsonify(random.choice(all_duas))
+            else:
+                api.abort(404, "No duas available")
+        except Exception as e:
+            logging.error(f"Error in get_dua_of_the_day: {e}")
+            api.abort(500, "Internal server error")
 
 # Register the Blueprint with the Flask application
 app.register_blueprint(api_v1)
