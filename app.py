@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 import csv
+import random
 
 app = Flask(__name__)
 
@@ -42,6 +43,16 @@ def get_individual_dua(chapter_id, dua_id):
             return jsonify({"error": "Dua not found in this chapter"}), 404
     else:
         return jsonify({"error": "Chapter not found"}), 404
+
+@app.route('/api/duadaily', methods=['GET'])
+def get_dua_of_the_day():
+    all_duas = []
+    for chapter_duas in duas.values():
+        all_duas.extend(chapter_duas)
+    if all_duas:
+        return jsonify(random.choice(all_duas))
+    else:
+        return jsonify({"error": "No duas available"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

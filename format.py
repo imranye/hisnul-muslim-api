@@ -26,8 +26,8 @@ for dua_container in soup.find_all('div', class_='dua-container'):
 
     if arabic_text and transliteration and translation and reference:
         duas.append({
-            'Chapter': chapter_name,
-            'Number of Duas': number_of_duas,
+            'Chapter': chapter_name if chapter_name else 'Uncategorized',
+            'Number of Duas': number_of_duas if number_of_duas else 'N/A',
             'Arabic': arabic_text.text.strip(),
             'Transliteration': transliteration.text.strip(),
             'Translation': translation.text.strip(),
