@@ -3,6 +3,7 @@ from flask import Flask, jsonify, Blueprint
 import csv
 import random
 import logging
+import os
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
@@ -181,4 +182,5 @@ app.register_blueprint(api_v1)
 
 # Run the application if this script is executed directly
 if __name__ == '__main__':
-    app.run(debug=True)  # Note: Set debug=False in production
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)  # Note: Set debug=False in production
