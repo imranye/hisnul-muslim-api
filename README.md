@@ -69,3 +69,31 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Public Access
+
+The API is also publicly hosted. You can access the deployed version at `https://hisnulmuslimapi-94ff7d621ce8.herokuapp.com/`.
+
+Here are the curl commands to interact with the deployed API:
+
+1. Get All Duas:
+   ```
+   curl -X GET https://hisnulmuslimapi-94ff7d621ce8.herokuapp.com/api/v1/duas
+   ```
+
+2. Get Duas for a Specific Chapter (replace `<chapter_id>` with the actual chapter ID):
+   ```
+   curl -X GET https://hisnulmuslimapi-94ff7d621ce8.herokuapp.com/api/v1/duas/<chapter_id>
+   ```
+
+3. Get a Specific Dua from a Specific Chapter (replace `<chapter_id>` and `<dua_id>` with the actual chapter ID and dua ID):
+   ```
+   curl -X GET https://hisnulmuslimapi-94ff7d621ce8.herokuapp.com/api/v1/duas/<chapter_id>/<dua_id>
+   ```
+
+4. Get Dua of the Day:
+   ```
+   curl -X GET https://hisnulmuslimapi-94ff7d621ce8.herokuapp.com/api/v1/duadaily
+   ```
+
+These commands will help you test the different endpoints of the publicly hosted API.
